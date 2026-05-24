@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Ledger - Invoice Generator{% endblock %}
+{% block page_title %}Ledger Statement{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="header-actions">
+            <form method="GET" class="search-form filter-form">
+                <div class="input-group">
+                    <select name="party_id" class="form-control" required>
+                        <option value="">All Parties</option>
+                        {% for p in parties %}
+                        <option value="{{ p.id }}" {% if party_id == p.id %}selected{% endif %}>{{ p.party_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}" placeholder="From">
+                </div>
+                <div class="input-group">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}" placeholder="To">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+            </form>
+            {% if party_id %}
+            <div class="btn-group">
+                <a href="{{ url_for('exports.ledger_pdf', party_id=party_id, date_from=date_from, date_to=date_to) }}" class="btn btn-warning" target="_blank">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{{ url_for('exports.ledger_excel', party_id=party_id, date_from=date_from, date_to=date_to) }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if party_id %}
+        <div class="ledger-summary">
+            <div class="summary-item">
+                <span class="summary-label">Party:</span>
+                <span class="summary-value"><strong>{{ party_name }}</strong></span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Opening Balance:</span>
+                <span class="summary-value {% if opening_balance > 0 %}text-red{% elif opening_balance < 0 %}text-green{% endif %}">
+                    <strong>{{ "%.2f"|format(opening_balance) }}</strong>
+                </span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Closing Balance:</span>
+                <span class="summary-value {% if closing_balance > 0 %}text-red{% elif closing_balance < 0 %}text-green{% endif %}">
+                    <strong>{{ "%.2f"|format(closing_balance) }}</strong>
+                </span>
+            </div>
+        </div>
+
+        {% if entries %}
+        <div class="table-responsive">
+            <table class="table ledger-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Ref No</th>
+                        <th>Debit</th>
+                        <th>Credit</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="opening-row">
+                        <td colspan="5"><strong>Opening Balance</strong></td>
+                        <td class="text-right"><strong>{{ "%.2f"|format(opening_balance) }}</strong></td>
+                    </tr>
+                    {% for entry in entries %}
+                    <tr class="ledger-row">
+                        <td>{{ entry.date.strftime('%d-%m-%Y') }}</td>
+                        <td>
+                            {% if entry.type == 'Invoice' %}
+                            <span class="badge badge-primary">{{ entry.type }}</span>
+                            {% else %}
+                            <span class="badge badge-success">{{ entry.type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.type == 'Invoice' %}
+                            <a href="{{ url_for('invoices.view', id=entry.ref_id) }}">{{ entry.ref_number }}</a>
+                            {% else %}
+                            <a href="{{ url_for('payments.view', id=entry.ref_id) }}">{{ entry.ref_number }}</a>
+                            {% endif %}
+                        </td>
+                        <td class="text-right {% if entry.debit > 0 %}text-red{% endif %}">
+                            {{ "%.2f"|format(entry.debit) if entry.debit > 0 else '' }}
+                        </td>
+                        <td class="text-right {% if entry.credit > 0 %}text-green{% endif %}">
+                            {{ "%.2f"|format(entry.credit) if entry.credit > 0 else '' }}
+                        </td>
+                        <td class="text-right {% if entry.balance > 0 %}text-red{% elif entry.balance < 0 %}text-green{% endif %}">
+                            <strong>{{ "%.2f"|format(entry.balance) }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="closing-row">
+                        <td colspan="5"><strong>Closing Balance</strong></td>
+                        <td class="text-right {% if closing_balance > 0 %}text-red{% elif closing_balance < 0 %}text-green{% endif %}">
+                            <strong>{{ "%.2f"|format(closing_balance) }}</strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="{{ url_for('ledger.index', party_id=party_id, date_from=date_from, date_to=date_to, page=page-1) }}" class="btn btn-sm">&laquo; Prev</a>
+            {% endif %}
+            <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+            <a href="{{ url_for('ledger.index', party_id=party_id, date_from=date_from, date_to=date_to, page=page+1) }}" class="btn btn-sm">Next &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-book fa-4x"></i>
+            <h3>No Transactions Found</h3>
+            <p>No ledger entries for the selected criteria.</p>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-hand-pointer fa-4x"></i>
+            <h3>Select a Party</h3>
+            <p>Choose a party from the dropdown and click Search to view their ledger.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

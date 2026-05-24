@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Combined Ledger - Invoice Generator{% endblock %}
+{% block page_title %}Combined Ledger{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="header-actions">
+            <form method="GET" class="search-form filter-form">
+                <div class="input-group">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}" placeholder="From">
+                </div>
+                <div class="input-group">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}" placeholder="To">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+                <a href="{{ url_for('ledger.combined') }}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+            </form>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if combined_data %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Party</th>
+                        <th class="text-right">Opening Balance</th>
+                        <th class="text-right">Total Invoices</th>
+                        <th class="text-right">Total Payments</th>
+                        <th class="text-right">Closing Balance</th>
+                        <th class="text-right">Outstanding</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in combined_data %}
+                    <tr>
+                        <td><strong>{{ item.party.party_name }}</strong></td>
+                        <td class="text-right {% if item.opening_balance > 0 %}text-red{% elif item.opening_balance < 0 %}text-green{% endif %}">
+                            {{ "%.2f"|format(item.opening_balance) }}
+                        </td>
+                        <td class="text-right">{{ "%.2f"|format(item.total_invoices) }}</td>
+                        <td class="text-right text-green">{{ "%.2f"|format(item.total_payments) }}</td>
+                        <td class="text-right {% if item.closing_balance > 0 %}text-red{% elif item.closing_balance < 0 %}text-green{% endif %}">
+                            <strong>{{ "%.2f"|format(item.closing_balance) }}</strong>
+                        </td>
+                        <td class="text-right {% if item.outstanding > 0 %}text-red{% elif item.outstanding < 0 %}text-green{% endif %}">
+                            <strong>{{ "%.2f"|format(item.outstanding) }}</strong>
+                        </td>
+                        <td class="action-cell">
+                            <a href="{{ url_for('ledger.party_ledger', party_id=item.party.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-book"></i> Ledger
+                            </a>
+                            <a href="{{ url_for('exports.ledger_pdf', party_id=item.party.id, date_from=date_from, date_to=date_to) }}" class="btn btn-sm btn-warning" target="_blank">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td><strong>TOTAL</strong></td>
+                        <td class="text-right"><strong>{{ "%.2f"|format(combined_data|sum(attribute='opening_balance')) }}</strong></td>
+                        <td class="text-right"><strong>{{ "%.2f"|format(combined_data|sum(attribute='total_invoices')) }}</strong></td>
+                        <td class="text-right"><strong>{{ "%.2f"|format(combined_data|sum(attribute='total_payments')) }}</strong></td>
+                        <td class="text-right"><strong>{{ "%.2f"|format(combined_data|sum(attribute='closing_balance')) }}</strong></td>
+                        <td class="text-right"><strong>{{ "%.2f"|format(combined_data|sum(attribute='outstanding')) }}</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-layer-group fa-4x"></i>
+            <h3>No Data</h3>
+            <p>Add parties and transactions to see combined ledger.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

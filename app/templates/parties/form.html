@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - Invoice Generator{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="form">
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="party_name">Party Name <span class="required">*</span></label>
+                    <input type="text" id="party_name" name="party_name" class="form-control" required
+                           value="{{ party.party_name if party else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="mobile">Mobile</label>
+                    <input type="text" id="mobile" name="mobile" class="form-control"
+                           value="{{ party.mobile if party else '' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control"
+                           value="{{ party.email if party else '' }}">
+                </div>
+                <div class="form-group col-6">
+                    <label for="gst_no">GST No</label>
+                    <input type="text" id="gst_no" name="gst_no" class="form-control"
+                           value="{{ party.gst_no if party else '' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" class="form-control" rows="3">{{ party.address if party else '' }}</textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="opening_balance">Opening Balance</label>
+                    <input type="number" id="opening_balance" name="opening_balance" class="form-control" step="0.01"
+                           value="{{ "%.2f"|format(party.opening_balance) if party else '0.00' }}">
+                    <small class="form-text">Positive = Party owes you, Negative = You owe party</small>
+                </div>
+                <div class="form-group col-6">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="2">{{ party.notes if party else '' }}</textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a href="{{ url_for('parties.index') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> {{ 'Update' if party else 'Save' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

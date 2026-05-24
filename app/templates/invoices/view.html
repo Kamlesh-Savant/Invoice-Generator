@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ invoice.invoice_number }} - Invoice Generator{% endblock %}
+{% block page_title %}Invoice: {{ invoice.invoice_number }}{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="invoice-actions">
+            <a href="{{ url_for('exports.invoice_pdf', invoice_id=invoice.id) }}" class="btn btn-warning" target="_blank">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </a>
+            <a href="{{ url_for('invoices.edit', id=invoice.id) }}" class="btn btn-info">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3" id="invoice-print-area">
+    <div class="card-body">
+        <div class="invoice-header">
+            <div class="invoice-header-left">
+                <h2>{{ invoice.party.party_name }}</h2>
+                <p>{{ invoice.party.address or '' }}</p>
+                <p>Mobile: {{ invoice.party.mobile or '-' }} | Email: {{ invoice.party.email or '-' }}</p>
+            </div>
+            <div class="invoice-header-right">
+                <h1>INVOICE</h1>
+                <p><strong>Invoice #:</strong> {{ invoice.invoice_number }}</p>
+                <p><strong>Date:</strong> {{ invoice.invoice_date.strftime('%d-%m-%Y') }}</p>
+            </div>
+        </div>
+        <table class="table invoice-items-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product / Service</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.product_name }}</td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">{{ "%.2f"|format(item.rate) }}</td>
+                    <td class="text-right">{{ "%.2f"|format(item.amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="4" class="text-right"><strong>Total Amount</strong></td>
+                    <td class="text-right"><strong>{{ "%.2f"|format(invoice.total_amount) }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        {% if invoice.notes %}
+        <div class="invoice-notes">
+            <p><strong>Notes:</strong> {{ invoice.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Parties - Invoice Generator{% endblock %}
+{% block page_title %}Party Management{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="header-actions">
+            <form method="GET" class="search-form">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, mobile or email..." value="{{ search }}">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                </div>
+            </form>
+            <a href="{{ url_for('parties.add') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add Party
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if parties %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Email</th>
+                        <th>Opening</th>
+                        <th>Outstanding</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for party in parties %}
+                    <tr>
+                        <td><strong>{{ party.party_name }}</strong></td>
+                        <td>{{ party.mobile or '-' }}</td>
+                        <td>{{ party.email or '-' }}</td>
+                        <td class="text-right">{{ "%.2f"|format(party.opening_balance) }}</td>
+                        <td class="text-right {% if party.outstanding > 0 %}text-red{% elif party.outstanding < 0 %}text-green{% endif %}">
+                            <strong>{{ "%.2f"|format(party.outstanding) }}</strong>
+                        </td>
+                        <td class="action-cell">
+                            <a href="{{ url_for('parties.edit', id=party.id) }}" class="btn btn-sm btn-info" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('ledger.party_ledger', party_id=party.id) }}" class="btn btn-sm btn-primary" title="Ledger">
+                                <i class="fas fa-book"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('parties.delete', id=party.id) }}" class="d-inline" onsubmit="return confirm('Delete party {{ party.party_name }}? All invoices and payments will also be deleted.');">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users fa-4x"></i>
+            <h3>No Parties Found</h3>
+            <p>{% if search %}No results for "{{ search }}"{% else %}Start by adding your first party!{% endif %}</p>
+            <a href="{{ url_for('parties.add') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Party</a>
+        </div>
+        {% endif %}
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="card-footer">
+        <div class="pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('parties.index', page=pagination.prev_num, search=search) }}" class="btn btn-sm">&laquo; Prev</a>
+            {% endif %}
+            <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            {% if pagination.has_next %}
+            <a href="{{ url_for('parties.index', page=pagination.next_num, search=search) }}" class="btn btn-sm">Next &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

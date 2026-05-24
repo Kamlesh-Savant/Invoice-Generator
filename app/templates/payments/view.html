@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Payment {{ payment.payment_number }} - Invoice Generator{% endblock %}
+{% block page_title %}Payment: {{ payment.payment_number }}{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="invoice-actions">
+            <a href="{{ url_for('exports.payment_pdf', payment_id=payment.id) }}" class="btn btn-warning" target="_blank">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </a>
+            <a href="{{ url_for('payments.edit', id=payment.id) }}" class="btn btn-info">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3" id="payment-print-area">
+    <div class="card-body">
+        <div class="invoice-header">
+            <div class="invoice-header-left">
+                <h2>{{ payment.party.party_name }}</h2>
+            </div>
+            <div class="invoice-header-right">
+                <h1>PAYMENT RECEIPT</h1>
+                <p><strong>Receipt #:</strong> {{ payment.payment_number }}</p>
+                <p><strong>Date:</strong> {{ payment.payment_date.strftime('%d-%m-%Y') }}</p>
+            </div>
+        </div>
+
+        <table class="table payment-details-table">
+            <tr>
+                <td><strong>Party:</strong></td>
+                <td>{{ payment.party.party_name }}</td>
+                <td><strong>Payment Mode:</strong></td>
+                <td><span class="badge badge-info">{{ payment.payment_mode }}</span></td>
+            </tr>
+            <tr>
+                <td><strong>Amount:</strong></td>
+                <td class="text-green"><strong>{{ "%.2f"|format(payment.amount) }}</strong></td>
+                <td><strong>Reference:</strong></td>
+                <td>{{ payment.reference_number or '-' }}</td>
+            </tr>
+        </table>
+
+        {% if payment.notes %}
+        <div class="invoice-notes mt-3">
+            <p><strong>Notes:</strong> {{ payment.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

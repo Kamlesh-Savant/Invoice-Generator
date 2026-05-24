@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Invoices - Invoice Generator{% endblock %}
+{% block page_title %}Invoice Management{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="header-actions">
+            <form method="GET" class="search-form filter-form">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search invoice number..." value="{{ search }}">
+                </div>
+                <div class="input-group">
+                    <select name="party_id" class="form-control">
+                        <option value="">All Parties</option>
+                        {% for p in parties %}
+                        <option value="{{ p.id }}" {% if party_id == p.id %}selected{% endif %}>{{ p.party_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}" placeholder="From">
+                </div>
+                <div class="input-group">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}" placeholder="To">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                <a href="{{ url_for('invoices.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+            </form>
+            <a href="{{ url_for('invoices.add') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Invoice
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if invoices %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date</th>
+                        <th>Party</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr>
+                        <td><strong>{{ inv.invoice_number }}</strong></td>
+                        <td>{{ inv.invoice_date.strftime('%d-%m-%Y') }}</td>
+                        <td><a href="{{ url_for('parties.edit', id=inv.party_id) }}">{{ inv.party.party_name }}</a></td>
+                        <td class="text-center">{{ inv.items|length }}</td>
+                        <td class="text-right"><strong>{{ "%.2f"|format(inv.total_amount) }}</strong></td>
+                        <td class="action-cell">
+                            <a href="{{ url_for('invoices.view', id=inv.id) }}" class="btn btn-sm btn-primary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('invoices.edit', id=inv.id) }}" class="btn btn-sm btn-info" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('exports.invoice_pdf', invoice_id=inv.id) }}" class="btn btn-sm btn-warning" title="PDF" target="_blank">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('invoices.delete', id=inv.id) }}" class="d-inline" onsubmit="return confirm('Delete invoice {{ inv.invoice_number }}?');">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-file-invoice fa-4x"></i>
+            <h3>No Invoices Found</h3>
+            <p>{% if search %}No results for "{{ search }}"{% else %}Create your first invoice!{% endif %}</p>
+            <a href="{{ url_for('invoices.add') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Invoice</a>
+        </div>
+        {% endif %}
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="card-footer">
+        <div class="pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('invoices.index', page=pagination.prev_num, search=search, party_id=party_id, date_from=date_from, date_to=date_to) }}" class="btn btn-sm">&laquo; Prev</a>
+            {% endif %}
+            <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            {% if pagination.has_next %}
+            <a href="{{ url_for('invoices.index', page=pagination.next_num, search=search, party_id=party_id, date_from=date_from, date_to=date_to) }}" class="btn btn-sm">Next &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

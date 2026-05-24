@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Invoice Generator{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-file-invoice"></i> IG</h2>
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('dashboard') %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('parties.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('parties') %}active{% endif %}">
+                    <i class="fas fa-users"></i> <span>Parties</span>
+                </a>
+                <a href="{{ url_for('invoices.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('invoices') %}active{% endif %}">
+                    <i class="fas fa-file-invoice"></i> <span>Invoices</span>
+                </a>
+                <a href="{{ url_for('payments.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('payments') %}active{% endif %}">
+                    <i class="fas fa-money-bill-wave"></i> <span>Payments</span>
+                </a>
+                <a href="{{ url_for('ledger.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('ledger') %}active{% endif %}">
+                    <i class="fas fa-book"></i> <span>Ledger</span>
+                </a>
+                <a href="{{ url_for('ledger.combined') }}" class="nav-item {% if request.endpoint == 'ledger.combined' %}active{% endif %}">
+                    <i class="fas fa-layer-group"></i> <span>Combined Ledger</span>
+                </a>
+                <a href="{{ url_for('settings.index') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}">
+                    <i class="fas fa-cog"></i> <span>Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="{{ url_for('auth.logout') }}" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="sidebar-toggle-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+                <div class="top-bar-title">{% block page_title %}Dashboard{% endblock %}</div>
+                <div class="top-bar-user">
+                    <span><i class="fas fa-user"></i> {{ current_user.username }}</span>
+                </div>
+            </header>
+            <div class="content-area">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    {% else %}
+    <div class="auth-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% block auth_content %}{% endblock %}
+    </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

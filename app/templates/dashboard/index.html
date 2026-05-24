@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Invoice Generator{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-cards">
+    <div class="card card-blue">
+        <div class="card-icon"><i class="fas fa-users"></i></div>
+        <div class="card-body">
+            <h3>{{ total_parties }}</h3>
+            <p>Total Parties</p>
+        </div>
+        <a href="{{ url_for('parties.index') }}" class="card-link">View Details <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="card card-green">
+        <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
+        <div class="card-body">
+            <h3>{{ total_invoices }}</h3>
+            <p>Total Invoices</p>
+        </div>
+        <a href="{{ url_for('invoices.index') }}" class="card-link">View Details <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="card card-orange">
+        <div class="card-icon"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="card-body">
+            <h3>{{ total_payments }}</h3>
+            <p>Total Payments</p>
+        </div>
+        <a href="{{ url_for('payments.index') }}" class="card-link">View Details <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="card card-purple">
+        <div class="card-icon"><i class="fas fa-calculator"></i></div>
+        <div class="card-body">
+            <h3>{{ "%.2f"|format(total_invoice_amount - total_payment_amount) }}</h3>
+            <p>Net Outstanding</p>
+        </div>
+        <a href="{{ url_for('ledger.combined') }}" class="card-link">View Details <i class="fas fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-clock"></i> Recent Invoices</h3>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_invoices %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Party</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in recent_invoices %}
+                        <tr>
+                            <td><a href="{{ url_for('invoices.view', id=inv.id) }}">{{ inv.invoice_number }}</a></td>
+                            <td>{{ inv.party.party_name }}</td>
+                            <td>{{ inv.invoice_date.strftime('%d-%m-%Y') }}</td>
+                            <td class="text-right">{{ "%.2f"|format(inv.total_amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-file-invoice fa-3x"></i>
+                    <p>No invoices yet</p>
+                    <a href="{{ url_for('invoices.add') }}" class="btn btn-primary">Create First Invoice</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-clock"></i> Recent Payments</h3>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_payments %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Receipt</th>
+                            <th>Party</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pay in recent_payments %}
+                        <tr>
+                            <td><a href="{{ url_for('payments.view', id=pay.id) }}">{{ pay.payment_number }}</a></td>
+                            <td>{{ pay.party.party_name }}</td>
+                            <td>{{ pay.payment_date.strftime('%d-%m-%Y') }}</td>
+                            <td class="text-right text-green">{{ "%.2f"|format(pay.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-money-bill-wave fa-3x"></i>
+                    <p>No payments yet</p>
+                    <a href="{{ url_for('payments.add') }}" class="btn btn-primary">Record First Payment</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if parties_outstanding %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> Top Outstanding Parties</h3>
+    </div>
+    <div class="card-body p-0">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Party</th>
+                    <th>Outstanding</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in parties_outstanding %}
+                <tr>
+                    <td><a href="{{ url_for('parties.index') }}">{{ p.name }}</a></td>
+                    <td class="text-right {% if p.outstanding > 0 %}text-red{% else %}text-green{% endif %}">
+                        {{ "%.2f"|format(p.outstanding) }}
+                    </td>
+                    <td><a href="{{ url_for('ledger.party_ledger', party_id=p.id) }}" class="btn btn-sm btn-info">Ledger</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

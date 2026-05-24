@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Payments - Invoice Generator{% endblock %}
+{% block page_title %}Payment Management{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="header-actions">
+            <form method="GET" class="search-form filter-form">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search payment number..." value="{{ search }}">
+                </div>
+                <div class="input-group">
+                    <select name="party_id" class="form-control">
+                        <option value="">All Parties</option>
+                        {% for p in parties %}
+                        <option value="{{ p.id }}" {% if party_id == p.id %}selected{% endif %}>{{ p.party_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <select name="payment_mode" class="form-control">
+                        <option value="">All Modes</option>
+                        {% for m in payment_modes %}
+                        <option value="{{ m }}" {% if payment_mode == m %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}" placeholder="From">
+                </div>
+                <div class="input-group">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}" placeholder="To">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                <a href="{{ url_for('payments.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+            </form>
+            <a href="{{ url_for('payments.add') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Record Payment
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if payments %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Receipt #</th>
+                        <th>Date</th>
+                        <th>Party</th>
+                        <th>Mode</th>
+                        <th>Ref No</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pay in payments %}
+                    <tr>
+                        <td><strong>{{ pay.payment_number }}</strong></td>
+                        <td>{{ pay.payment_date.strftime('%d-%m-%Y') }}</td>
+                        <td><a href="{{ url_for('parties.edit', id=pay.party_id) }}">{{ pay.party.party_name }}</a></td>
+                        <td><span class="badge badge-info">{{ pay.payment_mode }}</span></td>
+                        <td>{{ pay.reference_number or '-' }}</td>
+                        <td class="text-right text-green"><strong>{{ "%.2f"|format(pay.amount) }}</strong></td>
+                        <td class="action-cell">
+                            <a href="{{ url_for('payments.view', id=pay.id) }}" class="btn btn-sm btn-primary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('payments.edit', id=pay.id) }}" class="btn btn-sm btn-info" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('exports.payment_pdf', payment_id=pay.id) }}" class="btn btn-sm btn-warning" title="PDF" target="_blank">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('payments.delete', id=pay.id) }}" class="d-inline" onsubmit="return confirm('Delete payment {{ pay.payment_number }}?');">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-money-bill-wave fa-4x"></i>
+            <h3>No Payments Found</h3>
+            <p>{% if search %}No results for "{{ search }}"{% else %}Record your first payment!{% endif %}</p>
+            <a href="{{ url_for('payments.add') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Record Payment</a>
+        </div>
+        {% endif %}
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="card-footer">
+        <div class="pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('payments.index', page=pagination.prev_num, search=search, party_id=party_id, payment_mode=payment_mode, date_from=date_from, date_to=date_to) }}" class="btn btn-sm">&laquo; Prev</a>
+            {% endif %}
+            <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            {% if pagination.has_next %}
+            <a href="{{ url_for('payments.index', page=pagination.next_num, search=search, party_id=party_id, payment_mode=payment_mode, date_from=date_from, date_to=date_to) }}" class="btn btn-sm">Next &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

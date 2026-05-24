@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - Invoice Generator{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="POST" class="form" id="invoiceForm">
+            <div class="form-row">
+                <div class="form-group col-6">
+                    <label for="party_id">Party <span class="required">*</span></label>
+                    <select id="party_id" name="party_id" class="form-control" required>
+                        <option value="">Select Party</option>
+                        {% for p in parties %}
+                        <option value="{{ p.id }}" {% if invoice and invoice.party_id == p.id %}selected{% endif %}>
+                            {{ p.party_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-6">
+                    <label for="invoice_date">Invoice Date</label>
+                    <input type="date" id="invoice_date" name="invoice_date" class="form-control"
+                           value="{{ invoice.invoice_date.strftime('%Y-%m-%d') if invoice else '' }}">
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3><i class="fas fa-list"></i> Invoice Items</h3>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addItemRow()">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:40%">Product / Service</th>
+                                <th style="width:15%">Quantity</th>
+                                <th style="width:15%">Rate</th>
+                                <th style="width:15%">Amount</th>
+                                <th style="width:10%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            {% if items %}
+                            {% for item in items %}
+                            <tr>
+                                <td><input type="text" name="product_name[]" class="form-control" value="{{ item.product_name }}" required></td>
+                                <td><input type="number" name="quantity[]" class="form-control item-qty" value="{{ item.quantity }}" step="0.01" min="0.01" required oninput="calcRow(this)"></td>
+                                <td><input type="number" name="rate[]" class="form-control item-rate" value="{{ item.rate }}" step="0.01" min="0" required oninput="calcRow(this)"></td>
+                                <td><input type="text" class="form-control item-amount" value="{{ "%.2f"|format(item.amount) }}" readonly></td>
+                                <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); calcTotal();"><i class="fas fa-times"></i></button></td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td><input type="text" name="product_name[]" class="form-control" placeholder="Enter product or service" required></td>
+                                <td><input type="number" name="quantity[]" class="form-control item-qty" value="1" step="0.01" min="0.01" required oninput="calcRow(this)"></td>
+                                <td><input type="number" name="rate[]" class="form-control item-rate" value="0" step="0.01" min="0" required oninput="calcRow(this)"></td>
+                                <td><input type="text" class="form-control item-amount" value="0.00" readonly></td>
+                                <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); calcTotal();"><i class="fas fa-times"></i></button></td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="3" class="text-right"><strong>Total Amount:</strong></td>
+                                <td><strong><span id="totalAmount">0.00</span></strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" class="form-control" rows="2">{{ invoice.notes if invoice else '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('invoices.index') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> {{ 'Update' if invoice else 'Create Invoice' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let itemCount = {{ items|length if items else 1 }};
+
+function addItemRow() {
+    itemCount++;
+    const tbody = document.getElementById('itemsBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" name="product_name[]" class="form-control" placeholder="Enter product or service" required></td>
+        <td><input type="number" name="quantity[]" class="form-control item-qty" value="1" step="0.01" min="0.01" required oninput="calcRow(this)"></td>
+        <td><input type="number" name="rate[]" class="form-control item-rate" value="0" step="0.01" min="0" required oninput="calcRow(this)"></td>
+        <td><input type="text" class="form-control item-amount" value="0.00" readonly></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest(\'tr\').remove(); calcTotal();"><i class="fas fa-times"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function calcRow(input) {
+    const tr = input.closest('tr');
+    const qty = parseFloat(tr.querySelector('.item-qty').value) || 0;
+    const rate = parseFloat(tr.querySelector('.item-rate').value) || 0;
+    const amount = qty * rate;
+    tr.querySelector('.item-amount').value = amount.toFixed(2);
+    calcTotal();
+}
+
+function calcTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-amount').forEach(el => {
+        total += parseFloat(el.value) || 0;
+    });
+    document.getElementById('totalAmount').textContent = total.toFixed(2);
+}
+
+document.addEventListener('DOMContentLoaded', calcTotal);
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Setup - Invoice Generator{% endblock %}
+{% block page_title %}Setup{% endblock %}
+{% block auth_content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <i class="fas fa-user-cog fa-3x"></i>
+        <h1>Initial Setup</h1>
+        <p>Create admin user</p>
+    </div>
+    <form method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="username"><i class="fas fa-user"></i> Username</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="email"><i class="fas fa-envelope"></i> Email</label>
+            <input type="email" id="email" name="email" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="password"><i class="fas fa-lock"></i> Password</label>
+            <input type="password" id="password" name="password" class="form-control" required minlength="4">
+        </div>
+        <div class="form-group">
+            <label for="confirm_password"><i class="fas fa-lock"></i> Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control" required minlength="4">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-check"></i> Create Admin User
+        </button>
+    </form>
+</div>
+{% endblock %}
